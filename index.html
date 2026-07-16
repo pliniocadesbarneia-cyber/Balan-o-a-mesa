@@ -346,29 +346,7 @@ async function callClaude({
   learningNotes
 }) {
   // (nome mantido por compatibilidade com o resto do código — hoje chama o Gemini)
-  const system = `Você é um nutricionista clínico especialista em análise visual de refeições. Responda SEMPRE e APENAS com um objeto JSON válido, sem markdown, sem texto antes ou depois. Nunca invente certeza que não tem.
-
-Esquema exato de resposta:
-{
-  "confidence": "alta" | "media" | "baixa",
-  "identified_items": [
-    {"name": string, "estimated_portion": string, "calories": number, "protein_g": number, "carbs_g": number, "fat_g": number, "fiber_g": number}
-  ],
-  "total": {"calories": number, "protein_g": number, "carbs_g": number, "fat_g": number, "fiber_g": number, "sodium_mg": number},
-  "clarifying_questions": [string],
-  "suggestions": [string],
-  "diagnosis": string
-}
-
-Regras:
-- Se não conseguir identificar algum ingrediente com segurança (ex: tipo de óleo, se o arroz é integral ou branco, se há açúcar no molho, tamanho exato da porção), NÃO adivinhe silenciosamente: liste a dúvida em "clarifying_questions" (máx. 3, direto ao ponto, em português).
-- Se o usuário já respondeu perguntas anteriores (fornecidas abaixo), incorpore essas respostas nos cálculos e deixe "clarifying_questions" vazio se a dúvida foi resolvida.
-- "diagnosis" deve ser um parágrafo curto (3-5 frases) avaliando o equilíbrio da refeição.
-- "suggestions" deve ter de 2 a 4 trocas ou ajustes práticos e específicos.
-- Números sempre em valores realistas por porção observada, nunca zero a menos que realmente não exista aquele macronutriente.
-- Responda em português do Brasil.
-${learningNotes ? `
-Contexto de preferências e correções aprendidas deste usuário em refeições anteriores: ${learningNotes}` : ""}`;
+  const system = `Você é um nutricionista clínico especialista em análise visual de refeições. Responda SEMPRE e APENAS com um objeto JSON válido, sem markdown, sem texto antes ou depois. Nunca invente certeza que não tem.\n\nEsquema exato de resposta:\n{\n  "confidence": "alta" | "media" | "baixa",\n  "identified_items": [\n    {"name": string, "estimated_portion": string, "calories": number, "protein_g": number, "carbs_g": number, "fat_g": number, "fiber_g": number}\n  ],\n  "total": {"calories": number, "protein_g": number, "carbs_g": number, "fat_g": number, "fiber_g": number, "sodium_mg": number},\n  "clarifying_questions": [string],\n  "suggestions": [string],\n  "diagnosis": string\n}\n\nRegras:\n- Se não conseguir identificar algum ingrediente com segurança (ex: tipo de óleo, se o arroz é integral ou branco, se há açúcar no molho, tamanho exato da porção), NÃO adivinhe silenciosamente: liste a dúvida em "clarifying_questions" (máx. 3, direto ao ponto, em português).\n- Se o usuário já respondeu perguntas anteriores (fornecidas abaixo), incorpore essas respostas nos cálculos e deixe "clarifying_questions" vazio se a dúvida foi resolvida.\n- "diagnosis" deve ser um parágrafo curto (3-5 frases) avaliando o equilíbrio da refeição.\n- "suggestions" deve ter de 2 a 4 trocas ou ajustes práticos e específicos.\n- Números sempre em valores realistas por porção observada, nunca zero a menos que realmente não exista aquele macronutriente.\n- Responda em português do Brasil.\n${learningNotes ? `\nContexto de preferências e correções aprendidas deste usuário em refeições anteriores: ${learningNotes}` : ""}`;
   const payload = {
     system_instruction: {
       parts: [{
@@ -949,17 +927,10 @@ function App() {
     }
   };
   const submitAnswers = () => {
-    const answerText = Object.entries(answers).map(([q, a]) => `Pergunta: ${q}
-Resposta do usuário: ${a}`).join("
-
-");
+    const answerText = Object.entries(answers).map(([q, a]) => `Pergunta: ${q}\nResposta do usuário: ${a}`).join("\n\n");
     const learningNotes = profile.notes.slice(-8).join("; ");
     setScreen("analyzing");
-    runAnalysis(imgDataUrl, `Analise esta refeição novamente. O usuário respondeu às suas perguntas anteriores:
-
-${answerText}
-
-Recalcule os valores com essas informações e deixe clarifying_questions vazio se tudo ficou claro.`, learningNotes);
+    runAnalysis(imgDataUrl, `Analise esta refeição novamente. O usuário respondeu às suas perguntas anteriores:\n\n${answerText}\n\nRecalcule os valores com essas informações e deixe clarifying_questions vazio se tudo ficou claro.`, learningNotes);
   };
   const handleSave = async () => {
     const thumb = await thumbFromDataUrl(imgDataUrl);
